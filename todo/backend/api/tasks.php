@@ -1,21 +1,48 @@
 <?php
 header("Content-Type: application/json");
-require_once 'config.php';
+require_once 'config/database.php';
+require_once 'config/auth.php';
+
+$user = authenticateUser(); // authenticate user function from auth.php
+
+$pdo = getPDO(); // get PDO instance function from database.pdf
 
 try{
 $method = $_SERVER['REQUEST_METHOD'];
 switch($method) {
 
   case 'GET': //get all tasks
-    $stmt = $pdo->query("SELECT * FROM tasks");
-    echo json_encode($stmt ->fetchAll(PDO::FETCH_ASSOC));
+    $stmt = $pdo->query("SELECT * FROM tasks WHERE user_id = ?");
+    $stmt->execute([$user['id']]);
+    $tasks = $stmt ->fetchAll(PDO::FETCH_ASSOC);
+    echo json_encode([
+      'success' => true,
+      'data' => $tasks
+    ]);
     break;
 
   case 'POST': //create a new task
     $data = json_encode(file_get_contents('php://input'), true);
-    $stmt = $pdo->prepare("INSERT INTO tasks (title, completed) VALUES (?, ?)");
-    $stmt = $pdo->execute([$data['title'], false]);
-    echo json_encode(['id' => $pdo->lastInsertId()]);
+
+    if(empty($data['title'])){
+
+      http_response_code(400);
+
+      echo json_encode(['success' => false,
+      'error' => 'Title cannot be empty']);
+      exit;
+    }
+
+    $stmt = $pdo->prepare("INSERT INTO tasks (title, description, user_id) VALUES (?, ?, ?)");
+    $stmt = $pdo->execute([
+      htmlspecialchars($data['title']),
+    !empty($data['description']) , null, 
+    $user['id']]);
+    
+    echo json_encode([
+      'success' => true,
+      'id' => $pdo->lastInsertId()
+    ]);
     break;
 
   case 'PUT'://update task
@@ -57,9 +84,8 @@ switch($method) {
     http_response_code(405);
     echo json_encode(['success' => false, 
     'error' => 'Method not allowed']);
-
-  } 
-  catch(PDOException $e) {
+  }
+} catch(PDOException $e) {
       http_response_code(500);
       echo json_encode(['success' => false,
       'error' => 'Database error:' . $e->getMessage()]);
@@ -68,6 +94,4 @@ switch($method) {
       echo json_encode(['success' => false,
       'error' => $e->getMessage()]);
     }
-
-}
 ?>
