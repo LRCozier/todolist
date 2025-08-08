@@ -1,0 +1,12 @@
+{
+  "require":{
+    "firebase/php-jwt": "^6.4",
+    "vlucas/phpdotenv": "^5.5"
+  },
+  "autoload": {
+    "files": [
+      "config/database.php",
+      "config/auth.php"
+    ]
+  }
+}
