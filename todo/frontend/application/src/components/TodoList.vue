@@ -1,7 +1,7 @@
 <template>
   <div class="todo-list">
     <Todoitem
-    v-for="task in tasks"
+    v-for="task in task"
     :key="'task.id'"
     :task="task"
     @toggle="toggleTask"
@@ -12,7 +12,7 @@
 
 <script lang="ts">
 import { defineComponent, DefineComponent, PropType } from 'vue';
-import {Task} from '@/types/task';
+import { Task } from '../types/tasks';
 import Todoitem from './Todoitem.vue';
 
 export default defineComponent({

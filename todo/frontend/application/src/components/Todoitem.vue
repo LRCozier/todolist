@@ -9,7 +9,7 @@
 
 <script lang="ts">
 import { defineComponent, DefineComponent, PropType } from 'vue';
-import {Task} from '@/types/task';
+import { Task } from '../types/tasks';
 
 export default defineComponent(
   {
