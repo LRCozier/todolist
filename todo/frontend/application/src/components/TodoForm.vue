@@ -13,7 +13,7 @@
   </textarea>
   <div class="form-actions">
     <button type="submit">
-      {{ submitTest }}
+      Submit
     </button>
     <button
     v-if="showCancel"
@@ -52,8 +52,8 @@ export default defineComponent({
     const description = ref('');
 
     //populate form if editting an existing task
-    watch(() => props.initialTask, (task) = > {
-      if (task){
+    watch( () => props.initialTask, (task) => {
+      if (task) {
         title.value = task.title || '';
         description.value = task.description || '';
       }
