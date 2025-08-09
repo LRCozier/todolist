@@ -25,7 +25,7 @@ export const TaskService = {
 
   async create(task: Omit<Task, 'id' | 'user_id' | 'created_at' | 'updated_at'>): Promise<Task> {
     const response = await API.post('/tasks', task);
-    return {...task, id: response.data.id};
+    return response.data;
   },
 
   async update(id: number, task: Partial<Task>) : Promise<Task> {
