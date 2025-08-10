@@ -4,8 +4,8 @@
     <div v-if="loading">Loading...</div>
     <div v-else-if="error" class="error">{{ error }}</div>
     <template v-else>
-      <TodoForm @task-created="fetchTasks" />
-      <TodoList :tasks="tasks" @toggle-task="toggleTask" @edit-task="editTask" @delete-task="deleteTask" />
+      <TodoForm/>
+      <TodoList />
     </template>
   </main>
 </template>
