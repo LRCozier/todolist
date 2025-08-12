@@ -1,21 +1,28 @@
 <template>
-  <main class="app">
-    <h1>Procrasti-not</h1>
+    <header>
+      <h1>Procrasti-not</h1>
+      <div v-if="user">
+        <span>{{ user.email }}</span>
+        <button @click="logout">Logout</button>
+      </div>
+    </header>
+    <main class="app">
     <div v-if="loading">Loading...</div>
     <div v-else-if="error" class="error">{{ error }}</div>
-    <template v-else>
       <TodoForm/>
-      <TodoList />
-    </template>
+      <TodoList v-else-if="user" />
   </main>
+  <<footer>
+    <p>&copy;{{ new Date().getFullYear() }} Luke Rudderham-Cozier</p>
+  </footer>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import TodoForm from './components/TodoForm.vue';
 import TodoList from './components/TodoList.vue';
-import { TaskService } from './services/api';
-import { Task } from './types/tasks';
+import { TaskApi } from './services/api';
+import { Task } from './types/interfaces';
 
 const loading = ref(true);
 const error = ref<string | null>(null);
@@ -25,7 +32,7 @@ const tasks = ref<Task[]>([]);
 const fetchTasks = async () => {
   loading.value = true;
   try {
-    tasks.value = await TaskService.getAll();
+    tasks.value = await TaskApi.getAll();
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Failed to fetch tasks.';
   } finally {
@@ -43,7 +50,7 @@ const editTask = (id: number, newTitle: string) => {
 };
 
 const deleteTask = async (id: number) => {
-  await TaskService.delete(id);
+  await TaskApi.delete(id);
   fetchTasks();
 };
 

@@ -27,7 +27,7 @@
 
 <script lang="ts">
 import { defineComponent, PropType, ref, watch } from 'vue';
-import { Task } from '../types/tasks';
+import { Task } from '../types/interfaces';
 
 export default defineComponent({
   name: 'TodoForm',

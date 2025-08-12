@@ -12,7 +12,7 @@
 
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
-import { Task } from '../types/tasks';
+import { Task } from '../types/interfaces';
 import Todoitem from './Todoitem.vue';
 
 export default defineComponent({
