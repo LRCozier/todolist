@@ -1,4 +1,8 @@
 <?php
+
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
+
 function authenticateUser() {
   $headers = getallheaders();
   $authHeader = $headers['Authnorization'] ?? '';
