@@ -1,7 +1,7 @@
 <?php
 header("Content-Type: application/json");
-require_once 'config/database.php';
-require_once 'config/auth.php';
+require_once __DIR__ . 'config/database.php';
+require_once __DIR__ . 'config/auth.php';
 
 $user = authenticateUser(); // authenticate user function from auth.php
 
@@ -9,6 +9,8 @@ $pdo = getPDO(); // get PDO instance function from database.pdf
 
 try{
 $method = $_SERVER['REQUEST_METHOD'];
+$taskId = $_GET['id'] ?? null;
+
 switch($method) {
 
   case 'GET': //get all tasks
