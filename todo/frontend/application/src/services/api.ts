@@ -1,9 +1,8 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
-import { Task, ApiResponse, ApiError} from '../types/interfaces';
+import axios, { AxiosInstance} from 'axios';
+import { Task, ApiResponse, TaskCreatePayload, TaskUpdatePayload } from '../types/interfaces';
 
-// Create axios instance with base configuration
 const api: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5173/api',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api', 
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -22,12 +21,12 @@ export const TaskApi = {
     return response.data.data;
   },
 
-  async create(task: Omit<Task, 'id' | 'user_id' | 'created_at' | 'updated_at'>): Promise<Task> {
+  async create(task: TaskCreatePayload): Promise<Task> {
     const response = await api.post<ApiResponse<Task>>('/tasks', task);
     return response.data.data;
   },
 
-  async update(id: number, task: Partial<Task>): Promise<Task> {
+  async update(id: number, task: TaskUpdatePayload): Promise<Task> {
     const response = await api.put<ApiResponse<Task>>(`/tasks/${id}`, task);
     return response.data.data;
   },
