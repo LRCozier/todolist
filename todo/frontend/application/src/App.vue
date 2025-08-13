@@ -10,19 +10,21 @@
     <div v-if="loading">Loading...</div>
     <div v-else-if="error" class="error">{{ error }}</div>
     
-    <TodoForm
-      :initial-task="editingTask"
-      @submit-task="handleFormSubmit"
-      @cancel="cancelEdit"
-    />
-    
-    <TodoList
-      v-else-if="user"
-      :tasks="tasks"
-      @toggle="toggleTask"
-      @edit="editTask"
-      @delete="deleteTask"
-    />
+    <div v-else>
+      <TodoForm
+        :initial-task="editingTask"
+        @submit-task="handleFormSubmit"
+        @cancel="cancelEdit"
+      />
+      
+      <TodoList
+        v-if="user"
+        :tasks="tasks"
+        @toggle="toggleTask"
+        @edit="editTask"
+        @delete="deleteTask"
+      />
+    </div>
   </main>
   <footer>
     <p>&copy;{{ new Date().getFullYear() }} Luke Rudderham-Cozier</p>
