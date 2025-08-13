@@ -3,38 +3,12 @@ import { Task, ApiResponse, ApiError} from '../types/interfaces';
 
 // Create axios instance with base configuration
 const api: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5173/api',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
   },
 });
-
-// Request interceptor to add auth token
-api.interceptors.request.use((config: AxiosRequestConfig) => {
-  const token = localStorage.getItem('authToken');
-  if (token && config.headers) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
-
-// Response interceptor for error handling
-api.interceptors.response.use(
-  (response: AxiosResponse) => response,
-  (error: AxiosError<ApiError>) => {
-    if (error.response) {
-      // Handle specific status codes
-      const { status, data } = error.response;
-      
-      if (status === 401) {
-        // Token expired or invalid
-        localStorage.removeItem('authToken');
-        window.location.href = '/login';
-      }
-    }
-  }
-)
 
 // Tasks API
 export const TaskApi = {

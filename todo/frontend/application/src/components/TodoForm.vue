@@ -9,11 +9,14 @@
   required />
   <textarea 
   v-model="description"
-  placeholder="Enter Task Here">
+  placeholder="Enter Task Here"
+  required
+  autofocus>
   </textarea>
   <div class="form-actions">
-    <button type="submit">
-      Submit
+    <button type="submit"
+    class="btn btn-primary">
+      {{ initialTask ? 'Update Task' : 'Add Task' }}
     </button>
     <button
     v-if="showCancel"
@@ -33,7 +36,7 @@ export default defineComponent({
   name: 'TodoForm',
   props: {
     initialTask:{
-      type: Object as PropType<Partial<Task>>,
+      type: Object as PropType<Task>,
       default: null,
     },
     submitText: {
@@ -65,7 +68,7 @@ export default defineComponent({
         description: description.value,
       };
 
-    if (props.initialTask?.id) {
+    if (props.initialTask) {
       emit('submit', taskData)
     } else {
       emit('create', taskData.title);

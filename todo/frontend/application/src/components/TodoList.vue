@@ -1,5 +1,6 @@
 <template>
   <div class="todo-list">
+    <TodoForm />
     <Todoitem
     v-for="task in task"
     :key="'task.id'"
@@ -14,6 +15,7 @@
 import { defineComponent, PropType } from 'vue';
 import { Task } from '../types/interfaces';
 import Todoitem from './Todoitem.vue';
+import TodoForm from './TodoForm.vue';
 
 export default defineComponent({
   name: 'TodoList',
