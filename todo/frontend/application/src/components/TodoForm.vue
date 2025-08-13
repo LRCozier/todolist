@@ -1,96 +1,59 @@
 <template>
-  <form
-  @submit.prevent="handleSubmit"
-  class="todo-form">
-  <input
-  type="text"
-  v-model="title"
-  placeholder="Title"
-  required />
-  <textarea 
-  v-model="description"
-  placeholder="Enter Task Here"
-  required
-  autofocus>
-  </textarea>
-  <div class="form-actions">
-    <button type="submit"
-    class="btn btn-primary">
-      {{ initialTask ? 'Update Task' : 'Add Task' }}
-    </button>
-    <button
-    v-if="showCancel"
-    type="button"
-    @click="handleCancel">
-    Cancel
-    </button>
-  </div>
+  <form @submit.prevent="handleSubmit" class="todo-form">
+    <input type="text" v-model="title" placeholder="Title" required />
+    <textarea v-model="description" placeholder="Enter Task Here" required autofocus></textarea>
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">
+        {{ initialTask ? 'Update Task' : 'Add Task' }}
+      </button>
+      <button v-if="initialTask" type="button" @click="handleCancel">Cancel</button>
+    </div>
   </form>
 </template>
 
 <script lang="ts">
 import { defineComponent, PropType, ref, watch } from 'vue';
-import { Task } from '../types/interfaces';
+import { Task, TaskCreatePayload, TaskUpdatePayload } from '../types/interfaces';
 
 export default defineComponent({
   name: 'TodoForm',
   props: {
-    initialTask:{
-      type: Object as PropType<Task>,
+    initialTask: {
+      type: Object as PropType<Task | null>,
       default: null,
     },
-    submitText: {
-      type: String,
-      default: 'Add Task',
-    },
-    showCancel: {
-      type: Boolean,
-      default: false,
-    },
   },
-
-  emits: ['submit', 'cancel', 'create'],
-  setup(props, {emit}) {
+  emits: ['submit-task', 'cancel'],
+  setup(props, { emit }) {
     const title = ref('');
     const description = ref('');
 
-    //populate form if editting an existing task
-    watch( () => props.initialTask, (task) => {
+    // Watch for changes in initialTask
+    watch(() => props.initialTask, (task) => {
       if (task) {
         title.value = task.title || '';
         description.value = task.description || '';
+      } else {
+        // Reset the form
+        title.value = '';
+        description.value = '';
       }
-    }, {immediate: true});
+    }, { immediate: true });
 
     const handleSubmit = () => {
-      const taskData = {
+      const taskData: TaskCreatePayload | TaskUpdatePayload = {
         title: title.value,
         description: description.value,
       };
-
-    if (props.initialTask) {
-      emit('submit', taskData)
-    } else {
-      emit('create', taskData.title);
-    }
-
-    // reset form if not editting a task
-    if (!props.initialTask) {
-      title.value = '';
-      description.value = '';
-    }
+      
+      emit('submit-task', taskData);
     };
 
     const handleCancel = () => {
       emit('cancel');
-    }
+    };
 
-    return { title, description, handleSubmit, handleCancel};
-
+    return { title, description, handleSubmit, handleCancel };
   },
 });
 </script>
-
-<style>
-
-</style>
