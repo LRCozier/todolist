@@ -1,0 +1,16 @@
+{
+  "tasks": [
+    {
+      "id": 1,
+      "title": "Learn how to mock an API",
+      "description": "Using json-server to test the frontend independently.",
+      "completed": false
+    },
+    {
+      "id": 2,
+      "title": "Get rid of all my errors",
+      "description": "Fixing the app so it runs smoothly.",
+      "completed": true
+    }
+  ]
+}
