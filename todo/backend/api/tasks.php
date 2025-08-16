@@ -1,11 +1,8 @@
 <?php
 header("Content-Type: application/json");
 require_once __DIR__ . 'config/database.php';
-require_once __DIR__ . 'config/auth.php';
 
-$user = authenticateUser(); // authenticate user function from auth.php
-
-$pdo = getPDO(); // get PDO instance function from database.pdf
+$pdo = getPDO(); // get PDO instance function from database.php
 
 try{
 $method = $_SERVER['REQUEST_METHOD'];
