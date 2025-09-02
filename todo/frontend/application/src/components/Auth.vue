@@ -101,9 +101,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
+import { AuthApi } from '../services/api';
 
-const isLoginMode = ref(true); // Toggles between login and registration forms
+const emit = defineEmits(['login-success']);
+
+const isLoginMode = ref(true);
 const showPassword = ref(false);
 
 const loginUsername = ref('');
@@ -121,32 +124,58 @@ const messageClass = computed(() => {
   return messageType.value === 'success' ? 'success-message' : 'error-message';
 });
 
-const handleLogin = () => {
-  //Add api call to backend (login.php)
-  console.log('Logging in with:', {
-    username: loginUsername.value,
-    password: loginPassword.value,
-  });
+watch([loginUsername, loginPassword, registerUsername, registerEmail, registerPassword, confirmPassword], () => {
+  loginMessage.value = '';
+  registerMessage.value = '';
+});
 
-  loginMessage.value = 'Login successful!';
-  messageType.value = 'success';
+const handleLogin = async () => {
+  try {
+    const response = await AuthApi.login({
+      username: loginUsername.value,
+      password: loginPassword.value,
+    });
+
+    if (response.success) {
+      loginMessage.value = response.message || 'Login successful!';
+      messageType.value = 'success';
+      emit('login-success', { email: response.user?.email });
+    } else {
+      loginMessage.value = response.error || 'Login failed. Please try again.';
+      messageType.value = 'error';
+    }
+  } catch (error: any) {
+    loginMessage.value = error.message || 'An error occurred during login.';
+    messageType.value = 'error';
+  }
 };
 
-const handleRegister = () => {
-  // Add api call to backend (register.php)
+const handleRegister = async () => {
   if (registerPassword.value !== confirmPassword.value) {
     registerMessage.value = 'Passwords do not match.';
     messageType.value = 'error';
     return;
   }
 
-  console.log('Registering with:', {
-    username: registerUsername.value,
-    email: registerEmail.value,
-    password: registerPassword.value,
-  });
-  
-  registerMessage.value = 'Registration successful! You can now log in.';
-  messageType.value = 'success';
+  try {
+    const response = await AuthApi.register({
+      username: registerUsername.value,
+      email: registerEmail.value,
+      password: registerPassword.value,
+      confirm_password: confirmPassword.value,
+    });
+
+    if (response.success) {
+      registerMessage.value = response.message || 'Registration successful! You can now log in.';
+      messageType.value = 'success';
+      isLoginMode.value = true;
+    } else {
+      registerMessage.value = response.error || 'Registration failed. Please try again.';
+      messageType.value = 'error';
+    }
+  } catch (error: any) {
+    registerMessage.value = error.message || 'An error occurred during registration.';
+    messageType.value = 'error';
+  }
 };
 </script>
