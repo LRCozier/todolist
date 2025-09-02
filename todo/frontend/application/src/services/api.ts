@@ -2,14 +2,13 @@ import axios, { AxiosInstance} from 'axios';
 import { Task, ApiResponse, TaskCreatePayload, TaskUpdatePayload } from '../types/interfaces';
 
 const api: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000/', 
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api/', 
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Tasks API
 export const TaskApi = {
   async getAll(): Promise<Task[]> {
     const response = await api.get<ApiResponse<Task[]>>('/tasks');
