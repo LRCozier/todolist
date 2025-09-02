@@ -1,96 +1,103 @@
 <?php
 header("Content-Type: application/json");
-require_once __DIR__ . 'config/database.php';
+session_start();
 
-$pdo = getPDO(); // get PDO instance function from database.php
+// Ensure the user is logged in
+if (!isset($_SESSION['user_id'])) {
+    http_response_code(401);
+    echo json_encode(['success' => false, 'error' => 'You must be logged in to access this resource.']);
+    exit;
+}
 
-try{
-$method = $_SERVER['REQUEST_METHOD'];
-$taskId = $_GET['id'] ?? null;
+require_once __DIR__ . '/config/database.php';
 
-switch($method) {
+$pdo = getPDO();
+$userId = $_SESSION['user_id'];
 
-  case 'GET': //get all tasks
-    $stmt = $pdo->query("SELECT * FROM tasks WHERE user_id = ?");
-    $stmt->execute([$user['id']]);
-    $tasks = $stmt ->fetchAll(PDO::FETCH_ASSOC);
-    echo json_encode([
-      'success' => true,
-      'data' => $tasks
-    ]);
-    break;
+try {
+  $method = $_SERVER['REQUEST_METHOD'];
+  $taskId = $_GET['id'] ?? null;
+  $data = null;
+  
+  if ($method !== 'GET' && $method !== 'DELETE') {
+    $data = json_decode(file_get_contents('php://input'), true);
+  }
 
-  case 'POST': //create a new task
-    $data = json_encode(file_get_contents('php://input'), true);
+  switch ($method) {
+    case 'GET':
+      $stmt = $pdo->prepare("SELECT id, title, description, completed, created_at, updated_at FROM tasks WHERE user_id = ?");
+      $stmt->execute([$userId]);
+      $tasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+      echo json_encode([
+        'success' => true,
+        'data' => $tasks
+      ]);
+      break;
 
-    if(empty($data['title'])){
+    case 'POST':
+      if (empty($data['title'])) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'error' => 'Title cannot be empty']);
+        exit;
+      }
+      $stmt = $pdo->prepare("INSERT INTO tasks (title, description, user_id) VALUES (?, ?, ?)");
+      $stmt->execute([
+        $data['title'],
+        $data['description'] ?? null,
+        $userId
+      ]);
+      $newTask = [
+        'id'          => $pdo->lastInsertId(),
+        'user_id'     => $userId,
+        'title'       => $data['title'],
+        'description' => $data['description'] ?? null,
+        'completed'   => false,
+        'createdAt'   => date('Y-m-d H:i:s'),
+        'updatedAt'   => date('Y-m-d H:i:s')
+      ];
+      echo json_encode(['success' => true, 'data' => $newTask]);
+      break;
 
-      http_response_code(400);
+    case 'PUT':
+      if (!$taskId) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'error' => 'Task ID is required']);
+        exit;
+      }
+      
+      $stmt = $pdo->prepare("UPDATE tasks SET title = ?, description = ?, completed = ? WHERE id = ? AND user_id = ?");
+      $stmt->execute([
+        $data['title'] ?? null,
+        $data['description'] ?? null,
+        $data['completed'] ?? false,
+        $taskId,
+        $userId
+      ]);
 
-      echo json_encode(['success' => false,
-      'error' => 'Title cannot be empty']);
-      exit;
-    }
+      echo json_encode(['success' => true]);
+      break;
 
-    $stmt = $pdo->prepare("INSERT INTO tasks (title, description, user_id) VALUES (?, ?, ?)");
-    $stmt = $pdo->execute([
-      htmlspecialchars($data['title']),
-    !empty($data['description']) , null, 
-    $user['id']]);
-    
-    echo json_encode([
-      'success' => true,
-      'id' => $pdo->lastInsertId()
-    ]);
-    break;
+    case 'DELETE':
+      if (!$taskId) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'error' => 'Task ID is required']);
+        exit;
+      }
 
-  case 'PUT'://update task
-    $taskId = $_GET['id'] ?? null;
-    $data = json_encode(file_get_contents('php://input'), true);
-    if (!$taskId) {
-      http_response_code(400);
-      echo json_encode(['success' => false,
-      'error' => 'Task ID is required']);
-      exit;
-    }
-
-    verifyTaskOwnership($pdo, $taskId, $user['id']); //verify is task belongs to user
-    $stmt = $pdo->prepare("UPDATE tasks SET title = ?, description = ?, completed = ? WHERE id = ?");
-    $stmt->execute([htmlspecialchars($data['title']),
-    ! empty($data['description']) ? htmlspecialchars($data['description']) : null,
-    $data['completed'] ?? false,
-    $taskId]);
-
-    echo json_encode(['success' => true]);
-    break;
-
-  case 'DELETE': //delete task
-    $taskId = $_GET['id'] ?? null;
-    if (!$taskId) {
-      http_response_code(400);
-      echo json_encode(['success' => false,
-      'error' => 'Task ID is required']);
-      exit;
-    }
-
-    verifyTaskOwnership($pdo, $taskId, $user['id']); //verify is task belongs to user
-    $stmt = $pdo->prepare("DELETE FROM tasks WHERE id = ?");
-    $stmt->execute([$taskId]);
-    echo json_encode(['success' => true]);
-    break;
+      $stmt = $pdo->prepare("DELETE FROM tasks WHERE id = ? AND user_id = ?");
+      $stmt->execute([$taskId, $userId]);
+      echo json_encode(['success' => true]);
+      break;
 
     default:
-    http_response_code(405);
-    echo json_encode(['success' => false, 
-    'error' => 'Method not allowed']);
+      http_response_code(405);
+      echo json_encode(['success' => false, 'error' => 'Method not allowed']);
   }
-} catch(PDOException $e) {
-      http_response_code(500);
-      echo json_encode(['success' => false,
-      'error' => 'Database error:' . $e->getMessage()]);
-    } catch (Exception $e) {
-      http_response_code(500);
-      echo json_encode(['success' => false,
-      'error' => $e->getMessage()]);
-    }
+} catch (PDOException $e) {
+  http_response_code(500);
+  echo json_encode(['success' => false, 'error' => 'Database error: ' . $e->getMessage()]);
+} catch (Exception $e) {
+  http_response_code(500);
+  echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+}
 ?>
