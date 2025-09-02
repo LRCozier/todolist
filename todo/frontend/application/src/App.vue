@@ -1,7 +1,7 @@
 <template>
   <header>
     <h1>Procrasti-not</h1>
-    <div v-if="user">
+    <div v-if="isLoggedIn">
       <span>{{ user.email }}</span>
       <button @click="logout">Logout</button>
     </div>
@@ -11,19 +11,23 @@
     <div v-else-if="error" class="error">{{ error }}</div>
     
     <div v-else>
-      <TodoForm
-        :initial-task="editingTask"
-        @submit-task="handleFormSubmit"
-        @cancel="cancelEdit"
-      />
-      
-      <TodoList
-        v-if="user"
-        :tasks="tasks"
-        @toggle="toggleTask"
-        @edit="editTask"
-        @delete="deleteTask"
-      />
+      <!-- Conditionally render the auth component or the main app content -->
+      <Auth v-if="!isLoggedIn" @login-success="handleLoginSuccess" />
+
+      <div v-else>
+        <TodoForm
+          :initial-task="editingTask"
+          @submit-task="handleFormSubmit"
+          @cancel="cancelEdit"
+        />
+        
+        <TodoList
+          :tasks="tasks"
+          @toggle="toggleTask"
+          @edit="editTask"
+          @delete="deleteTask"
+        />
+      </div>
     </div>
   </main>
   <footer>
@@ -35,26 +39,32 @@
 import { ref, onMounted } from 'vue';
 import TodoForm from './components/TodoForm.vue';
 import TodoList from './components/TodoList.vue';
+import Auth from './components/Auth.vue';
 import { TaskApi } from './services/api';
 import { Task, TaskCreatePayload, TaskUpdatePayload } from './types/interfaces';
 
-// State management
 const loading = ref(true);
 const error = ref<string | null>(null);
 const tasks = ref<Task[]>([]);
-const editingTask = ref<Task | null>(null); // State to hold the task being edited
+const editingTask = ref<Task | null>(null);
 
-// User data (placeholder for a real authentication system)
+const isLoggedIn = ref(false);
 const user = ref({ email: 'example@email.com' }); 
 const logout = () => {
-  // Placeholder for logout logic
-  console.log('Logging out...');
+  isLoggedIn.value = false;
+  user.value = { email: '' };
 };
 
-// Function to fetch tasks from the API
+const handleLoginSuccess = (loggedInUser: { email: string }) => {
+  isLoggedIn.value = true;
+  user.value = loggedInUser;
+  fetchTasks();
+};
+
+// Function to fetch tasks API
 const fetchTasks = async () => {
   loading.value = true;
-  error.value = null; // Reset error
+  error.value = null;
   try {
     tasks.value = await TaskApi.getAll();
   } catch (err: any) {
@@ -64,7 +74,6 @@ const fetchTasks = async () => {
   }
 };
 
-// Handlers for events from child components
 const toggleTask = async (id: number) => {
   const taskToUpdate = tasks.value.find(task => task.id === id);
   if (!taskToUpdate) return;
@@ -73,7 +82,6 @@ const toggleTask = async (id: number) => {
 
   try {
     await TaskApi.update(id, { completed: updatedTask.completed });
-    // Update the task list without re-fetching everything
     Object.assign(taskToUpdate, updatedTask);
   } catch (err: any) {
     error.value = err.message || `Failed to update task with ID: ${id}.`;
@@ -83,18 +91,13 @@ const toggleTask = async (id: number) => {
 const handleFormSubmit = async (taskData: TaskCreatePayload | TaskUpdatePayload) => {
   try {
     if (editingTask.value) {
-      // It's an update operation
       const updatedTask = await TaskApi.update(editingTask.value.id, taskData);
-      
-      // Find the old task in the array and replace it with the updated one
       const index = tasks.value.findIndex(t => t.id === updatedTask.id);
       if (index !== -1) {
         tasks.value[index] = updatedTask;
       }
-      
-      editingTask.value = null; // Clear editing state
+      editingTask.value = null; 
     } else {
-      // It's a create operation
       const newTask = await TaskApi.create(taskData as TaskCreatePayload);
       tasks.value.push(newTask);
     }
@@ -104,11 +107,11 @@ const handleFormSubmit = async (taskData: TaskCreatePayload | TaskUpdatePayload)
 };
 
 const editTask = (task: Task) => {
-  editingTask.value = task; // Set the task to be edited
+  editingTask.value = task;
 };
 
 const cancelEdit = () => {
-  editingTask.value = null; // Cancel the editing state
+  editingTask.value = null;
 };
 
 const deleteTask = async (id: number) => {
@@ -121,16 +124,6 @@ const deleteTask = async (id: number) => {
 };
 
 onMounted(() => {
-  fetchTasks();
+  // Do not fetch tasks on mount - wait for a successful login
 });
 </script>
-
-<style scoped>
-.app {
-  padding: 20px;
-}
-.error {
-  color: red;
-  font-weight: bold;
-}
-</style>
