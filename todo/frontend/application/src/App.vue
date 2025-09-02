@@ -11,7 +11,6 @@
     <div v-else-if="error" class="error">{{ error }}</div>
     
     <div v-else>
-      <!-- Conditionally render the auth component or the main app content -->
       <Auth v-if="!isLoggedIn" @login-success="handleLoginSuccess" />
 
       <div v-else>
@@ -40,19 +39,48 @@ import { ref, onMounted } from 'vue';
 import TodoForm from './components/TodoForm.vue';
 import TodoList from './components/TodoList.vue';
 import Auth from './components/Auth.vue';
-import { TaskApi } from './services/api';
+import { TaskApi, AuthApi } from './services/api';
 import { Task, TaskCreatePayload, TaskUpdatePayload } from './types/interfaces';
+import axios from 'axios';
 
-const loading = ref(true);
+const loading = ref(false);
 const error = ref<string | null>(null);
 const tasks = ref<Task[]>([]);
 const editingTask = ref<Task | null>(null);
 
 const isLoggedIn = ref(false);
-const user = ref({ email: 'example@email.com' }); 
-const logout = () => {
-  isLoggedIn.value = false;
-  user.value = { email: '' };
+const user = ref({ email: '' }); 
+
+const checkLoginStatus = async () => {
+  loading.value = true;
+  try {
+    const response = await axios.get('/auth/status');
+    if (response.data.success) {
+      isLoggedIn.value = true;
+      user.value = response.data.user;
+      await fetchTasks();
+    } else {
+      isLoggedIn.value = false;
+      user.value = { email: '' };
+    }
+  } catch (err: any) {
+    isLoggedIn.value = false;
+    user.value = { email: '' };
+    console.error('Failed to check login status:', err.message);
+  } finally {
+    loading.value = false;
+  }
+};
+
+const logout = async () => {
+  try {
+    await AuthApi.logout();
+    isLoggedIn.value = false;
+    user.value = { email: '' };
+    tasks.value = [];
+  } catch (err: any) {
+    console.error('Logout failed:', err);
+  }
 };
 
 const handleLoginSuccess = (loggedInUser: { email: string }) => {
@@ -61,7 +89,6 @@ const handleLoginSuccess = (loggedInUser: { email: string }) => {
   fetchTasks();
 };
 
-// Function to fetch tasks API
 const fetchTasks = async () => {
   loading.value = true;
   error.value = null;
@@ -124,6 +151,6 @@ const deleteTask = async (id: number) => {
 };
 
 onMounted(() => {
-  // Do not fetch tasks on mount - wait for a successful login
+  checkLoginStatus();
 });
 </script>
