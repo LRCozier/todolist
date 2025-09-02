@@ -19,6 +19,29 @@ export interface TaskUpdatePayload {
   completed?: boolean;
 }
 
+export interface UserCredentials {
+  username: string;
+  password: string;
+}
+
+export interface UserRegistrationPayload {
+  username: string;
+  email: string;
+  password: string;
+  confirm_password: string;
+}
+
+export interface AuthResponse {
+  success: boolean;
+  message?: string;
+  error?: string;
+  user?: {
+    id: number;
+    username: string;
+    email: string;
+  };
+}
+
 export interface ApiError {
   status: number;
   message: string;

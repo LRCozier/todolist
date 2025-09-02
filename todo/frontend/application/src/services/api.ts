@@ -1,9 +1,10 @@
-import axios, { AxiosInstance} from 'axios';
-import { Task, ApiResponse, TaskCreatePayload, TaskUpdatePayload } from '../types/interfaces';
+import axios, { AxiosInstance } from 'axios';
+import { Task, ApiResponse, TaskCreatePayload, TaskUpdatePayload, UserCredentials, UserRegistrationPayload, AuthResponse } from '../types/interfaces';
 
 const api: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api/', 
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api/',
   timeout: 10000,
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -32,5 +33,21 @@ export const TaskApi = {
 
   async delete(id: number): Promise<void> {
     await api.delete(`/tasks/${id}`);
-  }
+  },
+};
+
+export const AuthApi = {
+  async login(credentials: UserCredentials): Promise<AuthResponse> {
+    const response = await api.post<AuthResponse>('/auth', { action: 'login', ...credentials });
+    return response.data;
+  },
+
+  async register(payload: UserRegistrationPayload): Promise<AuthResponse> {
+    const response = await api.post<AuthResponse>('/auth', { action: 'register', ...payload });
+    return response.data;
+  },
+
+  async logout(): Promise<void> {
+    await api.post('/auth', { action: 'logout' });
+  },
 };
