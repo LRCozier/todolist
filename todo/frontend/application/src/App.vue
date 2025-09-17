@@ -7,7 +7,12 @@
     </div>
   </header>
   <main class="app">
-    <div v-if="loading">Loading...</div>
+    <div v-if="loading" class="loading-indicator">
+      <div class="spinner"></div>
+      <span>
+        Loading...
+      </span>
+    </div>
     <div v-else-if="error" class="error">{{ error }}</div>
     
     <div v-else>
