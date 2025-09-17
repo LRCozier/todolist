@@ -13,7 +13,10 @@
         Loading...
       </span>
     </div>
-    <div v-else-if="error" class="error">{{ error }}</div>
+    <div v-else-if="error" class="error">
+      <p>{{ error }}</p>
+      <button @click="fetchTasks" class="retry-btn">Retry</button>
+    </div>
     
     <div v-else>
       <Auth v-if="!isLoggedIn" @login-success="handleLoginSuccess" />
@@ -85,6 +88,11 @@ const logout = async () => {
     tasks.value = [];
   } catch (err: any) {
     console.error('Logout failed:', err);
+    //reset state if API call fails
+    isLoggedIn.value = false;
+    user.value = {email: ''};
+    tasks.value = [];
+
   }
 };
 
@@ -117,6 +125,8 @@ const toggleTask = async (id: number) => {
     Object.assign(taskToUpdate, updatedTask);
   } catch (err: any) {
     error.value = err.message || `Failed to update task with ID: ${id}.`;
+    //revert UI change upon error message
+    taskToUpdate.completed = !taskToUpdate.completed;
   }
 };
 
