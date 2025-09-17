@@ -1,6 +1,10 @@
 <template>
   <div class="todo-list">
+    <div v-if="tasks.length === 0" class="empty-state-todo-list">
+      <p>No tasks yet. Add your first task above.</p>
+    </div>
     <TodoItem
+      v-else
       v-for="task in tasks"
       :key="task.id"
       :task="task"
