@@ -1,9 +1,9 @@
 <template>
   <header>
     <h1>Procrasti-not</h1>
-    <div v-if="isLoggedIn">
-      <span>{{ user.email }}</span>
-      <button @click="logout">Logout</button>
+    <div v-if="isLoggedIn" class="usercontrols">
+      <span class="useremail">{{ user.email }}</span>
+      <button @click="logout" class="logout-btn">Logout</button>
     </div>
   </header>
   <main class="app">

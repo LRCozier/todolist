@@ -59,6 +59,12 @@ header h1 {
   font-weight: 600;
 }
 
+.usercontrols{
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
 footer {
   background-color: var(--card-background);
   color: var(--text-light);
@@ -352,6 +358,25 @@ footer {
 }
 
 @media (max-width: 480px) {
+
+  header {
+    flex-direction: column;
+    gap: 0.5rem;
+    text-align: center;
+  }
+
+  .usercontrols {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .user-email{
+    font-size: 0.9rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px;
+  }
+
   .form-card {
     padding: var(--spacing-lg);
   }
