@@ -1,7 +1,23 @@
 <?php
-header("Access-Control-Allow-Origin: *");
+require_once __DIR__ . '/vendor/autoload.php';
+
+// Load environment variables
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
+$dotenv->load();
+
+// Set CORS headers
+$allowedOrigins = explode(',', $_ENV['ALLOWED_ORIGINS']);
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+
+if (in_array($origin, $allowedOrigins)) {
+    header("Access-Control-Allow-Origin: $origin");
+} else {
+    header("Access-Control-Allow-Origin: " . $allowedOrigins[0]);
+}
+
+header("Access-Control-Allow-Credentials: true");
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Content-Type: application/json");
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -9,26 +25,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
-session_start();
+// Parse request URL
+$requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+$requestParts = explode('/', trim($requestUri, '/'));
 
-$requestUri = explode('/', trim($_SERVER['REQUEST_URI'], '/'));
-
-if (isset($requestUri[0]) && $requestUri[0] === 'api') {
-    $resource = $requestUri[1] ?? null;
-
-    if ($resource === 'tasks') {
-        require __DIR__ . '/tasks.php';
-    } elseif ($resource === 'auth') {
-        require __DIR__ . '/auth.php';
+// Route the request
+if (count($requestParts) >= 2 && $requestParts[0] === 'api') {
+    $resource = $requestParts[1];
+    
+    if ($resource === 'auth') {
+        require __DIR__ . '/api/auth.php';
+    } elseif ($resource === 'tasks') {
+        require __DIR__ . '/api/tasks.php';
     } else {
-        
         http_response_code(404);
-        echo json_encode(['success' => false, 'error' => 'Endpoint not found.']);
+        echo json_encode(['success' => false, 'error' => 'Endpoint not found']);
     }
 } else {
-    
     http_response_code(404);
-    echo json_encode(['success' => false, 'error' => 'API not found.']);
+    echo json_encode(['success' => false, 'error' => 'API not found']);
 }
-
 ?>
