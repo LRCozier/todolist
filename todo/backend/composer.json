@@ -6,7 +6,9 @@
   "autoload": {
     "files": [
       "config/database.php",
-      "config/auth.php"
+      "config/auth.php",
+      "middleware/authMiddleware.php",
+      "utils/validation.php"
     ]
   }
 }
