@@ -10,6 +10,30 @@ const api: AxiosInstance = axios.create({
   },
 });
 
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('auth_token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('auth_token'); 
+      window.location.href = '/'
+    }
+    return Promise.reject(error);
+  }
+);
+
 export const TaskApi = {
   async getAll(): Promise<Task[]> {
     const response = await api.get<ApiResponse<Task[]>>('/tasks');
@@ -39,6 +63,9 @@ export const TaskApi = {
 export const AuthApi = {
   async login(credentials: UserCredentials): Promise<AuthResponse> {
     const response = await api.post<AuthResponse>('/auth', { action: 'login', ...credentials });
+    if (response.data.success && response.data.token){
+      localStorage.setItem('auth_token', response.data.token);
+    }
     return response.data;
   },
 
@@ -48,6 +75,35 @@ export const AuthApi = {
   },
 
   async logout(): Promise<void> {
-    await api.post('/auth', { action: 'logout' });
-  },
-};
+    localStorage.removeItem('auth_token');
+    try {
+      await api.post('/auth', { action: 'logout' });
+    } catch (error) {
+      console.log('Logout Completed (Service Unavailable)');
+    }}
+  };
+
+  export const checkAuthStatus = async(): Promise<{isLoggedIn: boolean, user:any}> => {
+    const token = localStorage.getItem('auth_token'); 
+    if (!token) {
+      return {
+        isLoggedIn: false,
+        user: null
+      };
+    }
+
+    try {
+      await TaskApi.getAll();
+      const userData = JSON.parse(localStorage.getItem('user_data') || '{}');
+      return {
+        isLoggedIn: true,
+        user: userData
+      }; 
+    } catch (error) {
+      localStorage.removeItem('auth_token');
+      return {
+        isLoggedIn: false,
+        user: null
+      };
+    }
+    }
