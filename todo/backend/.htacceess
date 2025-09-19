@@ -1,0 +1,12 @@
+RewriteEngine On
+
+#Handle Authorization Header
+RewriteCond %{HTTP:Authorisation} . RewriteRule .* - [E=HTTP_AUTHORISATION:%{HTTP_AUTHORISATION}]
+
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_URI} (.+)/$
+RewriteRule ^ %1 [L, R=301]
+
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_URI} !-f
+RewriteRule ^ index.php [L]

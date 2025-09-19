@@ -35,6 +35,7 @@ export interface AuthResponse {
   success: boolean;
   message?: string;
   error?: string;
+  token?: string;
   user?: {
     id: number;
     username: string;
@@ -52,4 +53,10 @@ export interface ApiError {
 export interface ApiResponse<T> {
   success: boolean;
   data: T;
+}
+
+export interface LoggedInUser {
+  email: string;
+  username: string;
+  token: string;
 }

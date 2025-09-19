@@ -139,7 +139,10 @@ const handleLogin = async () => {
     if (response.success) {
       loginMessage.value = response.message || 'Login successful!';
       messageType.value = 'success';
-      emit('login-success', { email: response.user?.email });
+      emit('login-success', { email: response.user?.email,
+        username: response.user?.username,
+        token: response.token
+       });
     } else {
       loginMessage.value = response.error || 'Login failed. Please try again.';
       messageType.value = 'error';
