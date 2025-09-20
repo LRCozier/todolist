@@ -47,9 +47,8 @@ import { ref, onMounted } from 'vue';
 import TodoForm from './components/TodoForm.vue';
 import TodoList from './components/TodoList.vue';
 import Auth from './components/Auth.vue';
-import { TaskApi, AuthApi } from './services/api';
+import { TaskApi, AuthApi, checkAuthStatus } from './services/api';
 import { Task, TaskCreatePayload, TaskUpdatePayload } from './types/interfaces';
-import axios from 'axios';
 
 const loading = ref(false);
 const error = ref<string | null>(null);
@@ -57,50 +56,57 @@ const tasks = ref<Task[]>([]);
 const editingTask = ref<Task | null>(null);
 
 const isLoggedIn = ref(false);
-const user = ref({ email: '' }); 
+const user = ref({ email: '', username: '' }); 
 
 const checkLoginStatus = async () => {
   loading.value = true;
   try {
-    const response = await axios.get('/auth/status');
-    if (response.data.success) {
-      isLoggedIn.value = true;
-      user.value = response.data.user;
+    const { isLoggedIn: loggedIn, user: userData } = await checkAuthStatus();
+    isLoggedIn.value = loggedIn;
+    if (loggedIn && userData) {
+      user.value = userData;
       await fetchTasks();
     } else {
       isLoggedIn.value = false;
-      user.value = { email: '' };
+      user.value = { email: '', username: '' };
     }
   } catch (err: any) {
     isLoggedIn.value = false;
-    user.value = { email: '' };
+    user.value = { email: '', username: '' };
     console.error('Failed to check login status:', err.message);
   } finally {
     loading.value = false;
   }
 };
 
+
 const logout = async () => {
   try {
     await AuthApi.logout();
     isLoggedIn.value = false;
-    user.value = { email: '' };
+    user.value = { email: '', username: '' };
     tasks.value = [];
   } catch (err: any) {
     console.error('Logout failed:', err);
-    //reset state if API call fails
+    // reset state even if API call fails
     isLoggedIn.value = false;
-    user.value = {email: ''};
+    user.value = { email: '', username: '' };
     tasks.value = [];
-
   }
 };
 
-const handleLoginSuccess = (loggedInUser: { email: string }) => {
+
+const handleLoginSuccess = (loggedInUser: { email: string; username: string; token: string }) => {
   isLoggedIn.value = true;
-  user.value = loggedInUser;
+  user.value = { email: loggedInUser.email, username: loggedInUser.username };
+  // Store user data in localStorage for later use
+  localStorage.setItem('user_data', JSON.stringify({
+    email: loggedInUser.email,
+    username: loggedInUser.username
+  }));
   fetchTasks();
 };
+
 
 const fetchTasks = async () => {
   loading.value = true;
